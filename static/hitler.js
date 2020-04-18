@@ -1,5 +1,6 @@
 var currentAction = ""
 var actionSubmited = false
+var vetoPossible = false;
 
 var name  = sessionStorage.getItem("NAME");
 //alert("Wilkommen, "+name)
@@ -65,6 +66,7 @@ function draw_action(ret){
     }
 
     else if(ret["action"] == "legislative_president"){
+        console.log("Veto"+ret["veto"])
         content += "<h5>Choose an article to discard:</h5>"        
         console.log(ret['cards'])
         content += "<form class='form-inline' onsubmit='event.preventDefault();'>"
@@ -72,6 +74,12 @@ function draw_action(ret){
         for(var i=1; i<3; i++){
             content += "<div class='form-check-inline' ><label class='form-check-label'><input type='radio' class='form-check-input' name='president_legislative' value="+ret['cards'][i]+">"+ret['cards'][i]+"</label> </div>"
         }
+        vetoPossible = false
+        if (ret["veto"]){
+            vetoPossible = true
+            content += "<div class='form-check'><input type='checkbox' class='form-check-input' id='veto'><label class='form-check-label' for='veto'>Veto</label></div>"
+        }
+
         content += "<button class='btn btn-secondary' onclick='legislative_president()'>Discard article</button> </form> "
     }
 
@@ -88,12 +96,20 @@ function draw_action(ret){
     }
 
     else if(ret["action"] =='legislative_chancellor'){
+        console.log("Veto"+ret["veto"])
         content += "<h5>Accept an article:</h5>"
         console.log("Chancellors choice:"+ret['cards'])
 
         content += "<form class='form-inline' onsubmit='event.preventDefault();'>"
         content += "<div class='form-check-inline' ><label class='form-check-label'><input type='radio' class='form-check-input' name='chancellor_legislative' value="+ret['cards'][0]+" checked>"+ret['cards'][0]+"</label> </div>"
         content += "<div class='form-check-inline' ><label class='form-check-label'><input type='radio' class='form-check-input' name='chancellor_legislative' value="+ret['cards'][1]+" >"+ret['cards'][1]+"</label> </div>"
+        
+        vetoPossible = false
+        if (ret["veto"]){
+            vetoPossible = true
+            content += "<div class='form-check'><input type='checkbox' class='form-check-input' id='veto'><label class='form-check-label' for='veto'>Veto</label></div>"
+        }
+
         content += "<button class='btn btn-secondary' onclick='legislative_chancellor()'>Accept article</button> </form> "
 
 
@@ -165,10 +181,18 @@ function legislative_chancellor(){
     var request = new XMLHttpRequest();
     request.open('POST', "/action");    
     request.setRequestHeader("Content-Type", "application/json");
+
+    var veto = false;
+
+    if (vetoPossible){
+        var vetoBtn = document.getElementById("veto");        
+        veto = vetoBtn.checked
+    }
     
     var json = JSON.stringify({
         "player": name,
-        "legislative_chancellor": article        
+        "legislative_chancellor": article,
+        "veto": veto     
     });     
     request.send(json);   
 }
@@ -187,15 +211,23 @@ function legislative_president(){
             articles_passed.push(form[i].value)
         }
     } 
-    console.log(articles_passed)
+   
 
     var request = new XMLHttpRequest();
     request.open('POST', "/action");    
     request.setRequestHeader("Content-Type", "application/json");
+
+    var veto = false;
+
+    if (vetoPossible){
+        var vetoBtn = document.getElementById("veto");        
+        veto = vetoBtn.checked
+    }
     
     var json = JSON.stringify({
         "player": name,
-        "legislative_president": articles_passed        
+        "legislative_president": articles_passed,
+        "veto": veto      
     });     
     request.send(json);   
     

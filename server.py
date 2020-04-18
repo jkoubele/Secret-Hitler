@@ -31,7 +31,7 @@ class States(Enum):
 class Game:
 
     def __init__(self, names):
-        # random.shuffle(names)
+        random.shuffle(names)
         self.players = [Player(name) for name in names]
 
         # self.players[4].dead = True
@@ -81,7 +81,10 @@ class Game:
         self.state = States.CHANCELLOR_NOMINATION
         self.message = f"President {self.president.name} is selecting a chancellor."
 
-    def next_round(self):
+        self.veto_president = False
+        self.veto_chancellor = False
+
+    def next_round(self, msg=""):
         next_president = self.president
         ok = False
         while not ok:
@@ -95,10 +98,11 @@ class Game:
         self.state = States.CHANCELLOR_NOMINATION
         self.president = next_president
         self.chancellor = None
-        self.message = f"President {game.president.name} is selecting a chancellor."
+        self.message = msg
+        self.message += f"<p>President {game.president.name} is selecting a chancellor."
 
 
-game = Game(["Anna", "Bob", "Cecil", "David", "Eva", "Fiona"])
+game = Game(["Jakub", "Ondra", "Marek", "Filip", "Tomas"])
 
 
 @app.route('/images/<path:path>')
@@ -185,16 +189,18 @@ def get_private_info(path):
         ret["action"] = "legislative_president"
         ret["cards"] = game.dealed_cards_president
         ret["veto"] = (game.fasist_articles == 5)
+        # ret["veto"] = True
 
     elif game.state == States.LEGISLATIVE_CHANCELLOR and game.chancellor == player:
         ret["action"] = "legislative_chancellor"
         ret["cards"] = game.dealed_cards_chancellor
         ret["veto"] = (game.fasist_articles == 5)
+        # ret["veto"] = True
 
     elif game.state == States.EXECUTION and game.president == player:
         ret["action"] = "execution"
         ret["candidates"] = [p.name for p in game.players if (p != player) and (not p.dead)]
-        
+
     elif game.state == States.CARD_INSPECTION and game.president == player:
         ret["action"] = "card_inspection"
         ret["cards"] = game.deck[:3]
@@ -220,7 +226,6 @@ def action():
             voted_nein = [player.name for player in game.players if (not player.ja) and (not player.dead)]
 
             if len(voted_ja) > len(voted_nein):
-                game.anarchy_counter = 0
                 game.chancellor = game.nominee
                 game.state = States.LEGISLATIVE_PRESIDENT
                 game.message = f"Chancellor {game.chancellor.name} was elected to the office!<p>Voted Ja: "
@@ -257,9 +262,6 @@ def action():
                         game.discard_pile = []
                         random.shuffle(game.deck)
 
-                    print("Deck", game.deck)
-                    print("Discard pile", game.discard_pile)
-
                     if article == "Liberal":
                         game.liberal_articles += 1
                         game.message += "<p>Angry mob in streets passed a liberal article!"
@@ -267,64 +269,101 @@ def action():
 
                     else:
                         game.fasist_articles += 1
-                        game.message += "<p>Angry mob in streets passed a fascist article!"
+                        game.message += "<p>Angry mob in streets passed a fascist article! "
                         # TODO: handle  fascist victory 
-                        
-                game.next_round()
+
+                game.next_round(game.message)
 
 
     elif game.state == States.LEGISLATIVE_PRESIDENT:
         game.dealed_cards_chancellor = action["legislative_president"]
         game.message = "President passed articles to the chancellor."
         game.state = States.LEGISLATIVE_CHANCELLOR
+        game.veto_president = action["veto"]
+        print("President veto ", game.veto_president)
 
     elif game.state == States.EXECUTION:
         game.players_dict[action["executed"]].dead = True
         game.next_round()
-        
-    elif game.state == States.CARD_INSPECTION:        
+
+    elif game.state == States.CARD_INSPECTION:
         game.next_round()
 
 
     elif game.state == States.LEGISLATIVE_CHANCELLOR:
 
         article = action["legislative_chancellor"]
-        print("Chancellor chooses", article)
 
-        for i, card in enumerate(game.dealed_cards_president):
-            if card == article:
-                game.dealed_cards_president.pop(i)
-                break
-        game.discard_pile += game.dealed_cards_president
+        game.veto_chancellor = action["veto"]
 
-        if len(game.deck) <= 3:
-            game.deck += game.discard_pile
-            game.discard_pile = []
-            random.shuffle(game.deck)
+        if game.veto_president and game.veto_chancellor:
+            # handle veto
+            game.discard_pile += game.dealed_cards_president
+            if len(game.deck) <= 3:
+                game.deck += game.discard_pile
+                game.discard_pile = []
+                random.shuffle(game.deck)
 
-        print("Deck", game.deck)
-        print("Discard pile", game.discard_pile)
+            game.anarchy_counter += 1
 
-        if article == "Liberal":
-            game.liberal_articles += 1
-            game.next_round()
-            # TODO: handle liberal victory 
+            game.message = f"Government applied a veto power!"
+
+            if game.anarchy_counter == 3:
+                article = game.deck.pop(0)
+                game.anarchy_counter = 0
+                game.last_chancellor = None
+                game.last_president = None
+
+                if len(game.deck) <= 3:
+                    game.deck += game.discard_pile
+                    game.discard_pile = []
+                    random.shuffle(game.deck)
+
+                if article == "Liberal":
+                    game.liberal_articles += 1
+                    game.message += "<p>Angry mob in streets passed a liberal article!"
+                    # TODO: handle liberal victory 
+
+                else:
+                    game.fasist_articles += 1
+                    game.message += "<p>Angry mob in streets passed a fascist article! "
+                    # TODO: handle  fascist victory 
+
+            game.next_round(game.message)
 
         else:
-            game.fasist_articles += 1
-            # TODO: handle  fascist victory 
-            # TODO: handle presidential powers
+            game.anarchy_counter = 0
+            for i, card in enumerate(game.dealed_cards_president):
+                if card == article:
+                    game.dealed_cards_president.pop(i)
+                    break
+            game.discard_pile += game.dealed_cards_president
 
-            if (game.fasist_articles in [4, 5]):
-                game.state = States.EXECUTION
-                game.message = f"President {game.president.name} has to execute one of the players!"
-                
-            elif (game.fasist_articles in [3] and len(game.players) in [5,6]):
-                game.message = f"President {game.president.name} now inspect top 3 cards."
-                game.state = States.CARD_INSPECTION
+            if len(game.deck) <= 3:
+                game.deck += game.discard_pile
+                game.discard_pile = []
+                random.shuffle(game.deck)
+
+            if article == "Liberal":
+                game.liberal_articles += 1
+                game.next_round()
+                # TODO: handle liberal victory 
 
             else:
-                game.next_round()
+                game.fasist_articles += 1
+                # TODO: handle  fascist victory 
+                # TODO: handle presidential powers
+
+                if (game.fasist_articles in [4, 5]):
+                    game.state = States.EXECUTION
+                    game.message = f"President {game.president.name} has to execute one of the players!"
+
+                elif (game.fasist_articles in [3] and len(game.players) in [5, 6]):
+                    game.message = f"President {game.president.name} now inspect top 3 cards."
+                    game.state = States.CARD_INSPECTION
+
+                else:
+                    game.next_round()
 
     return ""
 
