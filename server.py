@@ -13,9 +13,7 @@ class Player:
     def __init__(self, name):
         self.name = name
         self.dead = False
-        self.ja = False
-        self.last_president = False
-        self.last_president = False
+        self.ja = False        
         
         
 class States(Enum):
@@ -44,6 +42,9 @@ class Game:
         self.discard_pile = []
         self.dealed_cards_president = []
         self.dealed_cards_chancellor = []
+        
+        self.last_president = None
+        self.last_chancellor = None 
         
         
         self.anarchy_counter = 0
@@ -140,7 +141,12 @@ def get_private_info(path):
         
     if game.state == States.CHANCELLOR_NOMINATION and game.president == player:
         ret["action"] = "nomination"
-        ret["candidates"] = [p.name for p in game.players if p!=player and not p.dead]
+        living_players = [p for p in game.players if (not p.dead)]
+        if len(living_players) <= 5:
+            ret["candidates"] = [p.name for p in game.players if (p!=player) and (not p.dead) and (not game.last_chancellor==p)]
+        else:
+            ret["candidates"] = [p.name for p in game.players if (p!=player) and (not p.dead) and (not game.last_chancellor==p) and (not game.last_president==p)]
+            
         
     elif game.state == States.VOTING:
         ret["action"] = "voting" 
@@ -175,6 +181,7 @@ def action():
             voted_nein = [player.name for player in game.players if (not player.ja) and (not player.dead)]
             
             if len(voted_ja) > len(voted_nein):
+                game.anarchy_counter = 0
                 game.chancellor = game.nominee
                 game.state = States.LEGISLATIVE_PRESIDENT 
                 game.message = f"Chancellor {game.chancellor.name} was elected to the office!<p>Voted Ja: "
@@ -186,8 +193,60 @@ def action():
                 game.message = game.message[:-2] + "<p>President is now choosing the legislation." 
                 game.dealed_cards_president = [game.deck.pop(0) for i in range(3)]
                 
+                game.last_chancellor = game.chancellor
+                game.last_president = game.president
+                
             else:
-                pass # TODO: handle failed elections
+                game.anarchy_counter += 1    
+                
+                game.message = f"Chancellor nominee {game.nominee.name} did not get enough votes!<p>Voted Ja: "
+                for name in voted_ja:
+                    game.message += name+", "
+                game.message = game.message[:-2] + "<p> Voted Nein: "
+                for name in voted_nein:
+                    game.message += name+", "
+                game.message = game.message[:-2]
+                
+                if game.anarchy_counter == 3:
+                    article = game.deck.pop(0)
+                    game.anarchy_counter = 0
+                    game.last_chancellor = None
+                    game.last_president = None
+                    
+                    if len(game.deck) <=3:
+                        game.deck += game.discard_pile
+                        game.discard_pile = []
+                        random.shuffle(game.deck)
+                        
+                    print("Deck", game.deck)
+                    print("Discard pile", game.discard_pile)
+                    
+                    if article == "Liberal":
+                        game.liberal_articles += 1
+                        game.message += "<p>Angry mob in streets passed a liberal article!"
+                        # TODO: handle liberal victory 
+                        
+                    else:
+                        game.fasist_articles += 1
+                        game.message += "<p>Angry mob in streets passed a fascist article!"
+                        # TODO: handle  fascist victory 
+                    
+                
+                
+                next_president = game.president
+                ok = False
+                while not ok:
+                    index = game.players.index(next_president) + 1
+                    if index >= len(game.players):
+                        index = 0
+                    next_president = game.players[index]
+                    if not next_president.dead:
+                        ok = True
+                        
+                game.state = States.CHANCELLOR_NOMINATION
+                game.president = next_president
+                game.chancellor = None
+                game.message += f"<p>President {game.president.name} is selecting a chancellor."
     
     elif game.state == States.LEGISLATIVE_PRESIDENT:             
         game.dealed_cards_chancellor = action["legislative_president"]
@@ -196,6 +255,7 @@ def action():
         
     
     elif game.state == States.LEGISLATIVE_CHANCELLOR:
+        
         article = action["legislative_chancellor"]
         print("Chancellor chooses", article)   
         
@@ -204,6 +264,12 @@ def action():
                 game.dealed_cards_president.pop(i)
                 break
         game.discard_pile += game.dealed_cards_president
+        
+        if len(game.deck) <=3:
+            game.deck += game.discard_pile
+            game.discard_pile = []
+            random.shuffle(game.deck)
+            
         print("Deck", game.deck)
         print("Discard pile", game.discard_pile)
         
@@ -213,7 +279,8 @@ def action():
             
         else:
             game.fasist_articles += 1
-            # TODO: handle  fascist victory / presidential powers
+            # TODO: handle  fascist victory 
+            # TODO: handle presidential powers
             
             
         next_president = game.president
