@@ -188,13 +188,13 @@ def get_private_info(path):
     elif game.state == States.LEGISLATIVE_PRESIDENT and game.president == player:
         ret["action"] = "legislative_president"
         ret["cards"] = game.dealed_cards_president
-        ret["veto"] = (game.fasist_articles == 5)
+        ret["veto"] = True if game.fasist_articles == 5 else False
         # ret["veto"] = True
 
     elif game.state == States.LEGISLATIVE_CHANCELLOR and game.chancellor == player:
         ret["action"] = "legislative_chancellor"
         ret["cards"] = game.dealed_cards_chancellor
-        ret["veto"] = (game.fasist_articles == 5)
+        ret["veto"] = True if game.fasist_articles == 5 else False
         # ret["veto"] = True
 
     elif game.state == States.EXECUTION and game.president == player:
@@ -293,8 +293,9 @@ def action():
     elif game.state == States.LEGISLATIVE_CHANCELLOR:
 
         article = action["legislative_chancellor"]
-
-        game.veto_chancellor = action["veto"]
+        game.veto_chancellor = False
+        if "veto" in action.keys():
+            game.veto_chancellor = action["veto"]
 
         if game.veto_president and game.veto_chancellor:
             # handle veto
@@ -369,4 +370,4 @@ def action():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host=0.0.0.0)
