@@ -38,12 +38,23 @@ function draw_action(ret){
     if(ret["action"] == "nomination"){
         content += "<h5>Choose a chancellor</h5>"
 
-        content += "<div class='form-check' ><label class='form-check-label'><input type='radio' class='form-check-input' name='candidates' value='"+ret["candidates"][0]+"' checked>"+ret["candidates"][0]+ "</label> </div>"
+        content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='candidates' value='"+ret["candidates"][0]+"' checked>"+ret["candidates"][0]+ "</label> </div>"
         for(var i=1; i<ret["candidates"].length; i++){
-            content += "<div class='form-check' ><label class='form-check-label'><input type='radio' class='form-check-input' name='candidates' value='"+ret["candidates"][i]+"'>"+ret["candidates"][i]+ "</label> </div>"        }
+            content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='candidates' value='"+ret["candidates"][i]+"'>"+ret["candidates"][i]+ "</label> </div>"        }
         
         content += "<p><p><button type='button' onclick='nominateChancellor()' class='btn btn-secondary btn-lg' style='position: absolute; left: 0px;'>Submit</button>"        
         
+    }
+
+    else if(ret["action"] == "execution"){
+        content += "<h5>Choose a player to execute!</h5>"
+
+        content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='execution' value='"+ret["candidates"][0]+"' checked>"+ret["candidates"][0]+ "</label> </div>"
+        for(var i=1; i<ret["candidates"].length; i++){
+            content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='execution' value='"+ret["candidates"][i]+"'>"+ret["candidates"][i]+ "</label> </div>"        }
+        
+        content += "<p><p><button type='button' onclick='execute()' class='btn btn-secondary btn-lg' style='position: absolute; left: 0px;'>Execute!</button>"        
+
     }
 
     else if (ret["action"] == "voting"){        
@@ -62,6 +73,17 @@ function draw_action(ret){
             content += "<div class='form-check-inline' ><label class='form-check-label'><input type='radio' class='form-check-input' name='president_legislative' value="+ret['cards'][i]+">"+ret['cards'][i]+"</label> </div>"
         }
         content += "<button class='btn btn-secondary' onclick='legislative_president()'>Discard article</button> </form> "
+    }
+
+    else if(ret["action"] == "card_inspection"){
+        content += "<h5>Next 3 cards in the deck:</h5>"        
+        console.log(ret['cards'])        
+        for(var i=0; i<3; i++){
+            content += "<p>"+ret['cards'][i]            
+        }
+        content += "<p><button class='btn btn-secondary' onclick='inspection_done()'>O.K.</button> </form> "
+
+
 
     }
 
@@ -80,6 +102,49 @@ function draw_action(ret){
     document.getElementById("action").innerHTML = content
 
 }
+
+function inspection_done(){
+    if (actionSubmited){
+        return
+    }
+    actionSubmited = true
+
+    var request = new XMLHttpRequest();
+    request.open('POST', "/action");    
+    request.setRequestHeader("Content-Type", "application/json");
+    
+    var json = JSON.stringify({
+        "player": name              
+    });      
+    request.send(json);   
+
+}
+
+function execute(){
+    if (actionSubmited){
+        return
+    }
+    actionSubmited = true
+    var candidatesForm = document.getElementsByName("execution");
+    var nominee;
+    for(var i = 0; i < candidatesForm.length; i++){
+        if(candidatesForm[i].checked){            
+            nominee = candidatesForm[i].value
+        }
+    }    
+
+    var request = new XMLHttpRequest();
+    request.open('POST', "/action");    
+    request.setRequestHeader("Content-Type", "application/json");
+    
+    var json = JSON.stringify({
+        "player": name,
+        "executed": nominee        
+    });      
+    request.send(json);    
+
+}
+
 
 function legislative_chancellor(){    
     if (actionSubmited){
