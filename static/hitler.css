@@ -1,0 +1,11 @@
+div.article-liberal {
+    content:url("static/images/liberal_article.png");
+}​
+
+
+
+div.board {
+    height: 200px;
+    width: 50%;
+    background-color: rgb(129, 45, 197);
+}
