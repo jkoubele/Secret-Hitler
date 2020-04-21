@@ -26,6 +26,7 @@ class States(Enum):
     LEGISLATIVE_PRESIDENT = "LEGISLATIVE_PRESIDENT"
     EXECUTION = "EXECUTION"
     CARD_INSPECTION = "CARD_INSPECTION"
+    EXTRA_PRESIDENT = "EXTRA_PRESIDENT"
 
 
 class Game:
@@ -83,6 +84,7 @@ class Game:
 
         self.veto_president = False
         self.veto_chancellor = False
+        self.next_ordinary_president = None
 
     def next_round(self, msg=""):
         next_president = self.president
@@ -97,12 +99,16 @@ class Game:
 
         self.state = States.CHANCELLOR_NOMINATION
         self.president = next_president
+        if self.next_ordinary_president:
+            self.president = self.next_ordinary_president
+            self.next_ordinary_president = None
         self.chancellor = None
         self.message = msg
         self.message += f"<p>President {game.president.name} is selecting a chancellor."
 
 
-game = Game(["Jakub", "Ondra", "Marek", "Filip", "Tomas"])
+#game = Game(["Jakub", "Ondra", "Marek", "Filip", "Tomas"])
+game = Game(["Anna", "Bob", "Cecil", "David", "Fiona"])
 
 
 @app.route('/images/<path:path>')
@@ -204,6 +210,11 @@ def get_private_info(path):
     elif game.state == States.CARD_INSPECTION and game.president == player:
         ret["action"] = "card_inspection"
         ret["cards"] = game.deck[:3]
+        
+    elif game.state == States.EXTRA_PRESIDENT and game.president == player:
+        ret["action"] = "extra_president"
+        ret["candidates"] = [p.name for p in game.players if (p != player) and (not p.dead)]
+        
 
     return str(json.dumps(ret))
 
@@ -217,6 +228,28 @@ def action():
         game.state = States.VOTING
         game.message = f"President {game.president.name} nominated {game.nominee.name} for chancellor. Vote Ja or Nein."
         game.num_votes = 0
+        print(f"Cards left: {len(game.deck)}, discard pile: {len(game.discard_pile)}")
+        
+        
+    elif game.state == States.EXTRA_PRESIDENT:
+        game.president = game.players_dict[action["extraPresident"]]
+        
+        next_ordinary_president = game.president
+        ok = False
+        while not ok:
+            index = game.players.index(next_ordinary_president) + 1
+            if index >= len(game.players):
+                index = 0
+            next_ordinary_president = game.players[index]
+            if not next_ordinary_president.dead:
+                ok = True
+        
+        game.next_ordinary_president = next_ordinary_president
+        game.chancellor = None
+        game.state = States.CHANCELLOR_NOMINATION
+        game.message = f"<p>President {game.president.name} is selecting a chancellor."
+        
+        
 
     elif game.state == States.VOTING:
         game.players_dict[action["player"]].ja = True if action["vote"] == "ja" else False
@@ -360,8 +393,11 @@ def action():
                     game.message = f"President {game.president.name} has to execute one of the players!"
 
                 elif (game.fasist_articles in [3] and len(game.players) in [5, 6]):
-                    game.message = f"President {game.president.name} now inspect top 3 cards."
+                    game.message = f"President {game.president.name} now inspects top 3 cards."
                     game.state = States.CARD_INSPECTION
+                elif (game.fasist_articles in [3] and len(game.players) >=7 ):
+                    game.message = f"President {game.president.name} now select president for special elections."
+                    game.state = States.EXTRA_PRESIDENT
 
                 else:
                     game.next_round()
@@ -370,4 +406,4 @@ def action():
 
 
 if __name__ == "__main__":
-    app.run(host=0.0.0.0)
+    app.run()

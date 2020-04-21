@@ -58,6 +58,18 @@ function draw_action(ret){
 
     }
 
+    else if(ret["action"] == "extra_president"){
+        content += "<h5>Choose a next president for the special election.</h5>"
+
+        content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='extraElections' value='"+ret["candidates"][0]+"' checked>"+ret["candidates"][0]+ "</label> </div>"
+        for(var i=1; i<ret["candidates"].length; i++){
+            content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='extraElections' value='"+ret["candidates"][i]+"'>"+ret["candidates"][i]+ "</label> </div>"        }
+        
+        content += "<p><p><button type='button' onclick='extraElections()' class='btn btn-secondary btn-lg' style='position: absolute; left: 0px;'>Execute!</button>"        
+
+
+    }
+
     else if (ret["action"] == "voting"){        
         content += "<div class='form-check' ><label class='form-check-label'><input type='radio' class='form-check-input' name='voting' value='ja' checked>"+'Ja!'+"</label> </div>"
         content += "<div class='form-check' ><label class='form-check-label'><input type='radio' class='form-check-input' name='voting' value='nein'>"+'Nein!'+"</label> </div>"
@@ -133,6 +145,31 @@ function inspection_done(){
         "player": name              
     });      
     request.send(json);   
+
+}
+
+function extraElections(){
+    if (actionSubmited){
+        return
+    }
+    actionSubmited = true
+    var candidatesForm = document.getElementsByName("extraElections");
+    var nominee;
+    for(var i = 0; i < candidatesForm.length; i++){
+        if(candidatesForm[i].checked){            
+            nominee = candidatesForm[i].value
+        }
+    }    
+
+    var request = new XMLHttpRequest();
+    request.open('POST', "/action");    
+    request.setRequestHeader("Content-Type", "application/json");
+    
+    var json = JSON.stringify({
+        "player": name,
+        "extraPresident": nominee        
+    });      
+    request.send(json);    
 
 }
 
