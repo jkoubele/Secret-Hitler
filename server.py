@@ -96,15 +96,15 @@ class Game:
             next_president = self.players[index]
             if not next_president.dead:
                 ok = True
-
+        
         self.state = States.CHANCELLOR_NOMINATION
         self.president = next_president
         if self.next_ordinary_president:
             self.president = self.next_ordinary_president
             self.next_ordinary_president = None
-        self.chancellor = None
+        self.chancellor = None        
         self.message = msg
-        self.message += f"<p>President {game.president.name} is selecting a chancellor."
+        self.message += f"<p>President {self.president.name} is selecting a chancellor."
 
 
 #game = Game(["Jakub", "Ondra", "Marek", "Filip", "Tomas"])
@@ -156,6 +156,8 @@ def get_public_game():
 
     ret["dead"] = [player.dead for player in game.players]
     ret["message"] = game.message
+    ret["deck_cards"] = len(game.deck)
+    ret["discard_cards"] = len(game.discard_pile)
     return str(json.dumps(ret))
 
 
@@ -228,11 +230,11 @@ def action():
         game.state = States.VOTING
         game.message = f"President {game.president.name} nominated {game.nominee.name} for chancellor. Vote Ja or Nein."
         game.num_votes = 0
-        print(f"Cards left: {len(game.deck)}, discard pile: {len(game.discard_pile)}")
+        print(f"Chncellor nomination. Cards left: {len(game.deck)}, discard pile: {len(game.discard_pile)}")
         
         
     elif game.state == States.EXTRA_PRESIDENT:
-        game.president = game.players_dict[action["extraPresident"]]
+        
         
         next_ordinary_president = game.president
         ok = False
@@ -244,7 +246,8 @@ def action():
             if not next_ordinary_president.dead:
                 ok = True
         
-        game.next_ordinary_president = next_ordinary_president
+        game.next_ordinary_president = next_ordinary_president        
+        game.president = game.players_dict[action["extraPresident"]]
         game.chancellor = None
         game.state = States.CHANCELLOR_NOMINATION
         game.message = f"<p>President {game.president.name} is selecting a chancellor."

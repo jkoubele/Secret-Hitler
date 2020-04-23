@@ -500,6 +500,10 @@ function draw_policies(ret){
         }
     }    
     electionCounter.innerHTML = content
+
+    var deck = document.getElementById("deck");    
+    deck.innerHTML = "<b>Deck: "+ret["deck_cards"]+" cards </b> <p><b>Discard pile: "+ret["discard_cards"]+" cards  </b> "    
+
 }
 
 
