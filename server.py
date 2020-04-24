@@ -120,6 +120,13 @@ def send_image(path):
 def root():
     return app.send_static_file('index.html')
 
+@app.route('/setup')
+def setup():
+    return app.send_static_file('setup.html')
+
+@app.route('/setup.js')
+def setup_js():
+    return app.send_static_file('setup.js')
 
 @app.route('/secretHitler.html')
 def root_board():
@@ -220,6 +227,13 @@ def get_private_info(path):
 
     return str(json.dumps(ret))
 
+@app.route("/restart", methods=['POST'])
+def restart():
+    players = request.json['players']
+    print("Restarting the game with players:", players)
+    global game
+    game = Game(players)
+    return ""
 
 @app.route("/action", methods=['POST'])
 def action():
@@ -409,4 +423,4 @@ def action():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0")

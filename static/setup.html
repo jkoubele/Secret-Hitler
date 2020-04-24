@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Secret Hitler</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    
+
+</head>
+<body>
+
+<script type="text/javascript" src="setup.js"></script>
+
+<div class="jumbotron text-center">
+    <h1>Secret Hitler</h1>    
+</div>
+
+<div class="row d-flex justify-content-center">
+    
+    <form class="form" style="margin-top: 10px;">        
+
+        <div class="form-group form-inline" onsubmit='event.preventDefault();'>  
+            <label for="player1">Player 1 </label>
+            <input  class="form-control" id="player1" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player2">Player 2 </label>
+            <input  class="form-control" id="player2" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player3">Player 3 </label>
+            <input  class="form-control" id="player3" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player4">Player 4 </label>
+            <input  class="form-control" id="player4" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player5">Player 5 </label>
+            <input  class="form-control" id="player5" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player6">Player 6 </label>
+            <input  class="form-control" id="player6" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player7">Player 7 </label>
+            <input  class="form-control" id="player7" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player8">Player 8 </label>
+            <input  class="form-control" id="player8" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player9">Player 9</label>
+            <input  class="form-control" id="player9" placeholder="" style="margin-left: 13px;">        
+        </div>  
+
+        <div class="form-group form-inline">  
+            <label for="player10">Player 10</label>
+            <input  class="form-control" id="player10" placeholder="" style="margin-left: 5px;">        
+        </div> 
+        
+        <div id="currentGame">Current game: </div>
+        <div id ="newGame">New game: </div>
+        
+        
+        <button class="btn btn-primary" onclick="restart()" onsubmit='event.preventDefault();'>Restart Game</button>
+    </form>
+
+</div>
+
+
+</body>
+</html>
