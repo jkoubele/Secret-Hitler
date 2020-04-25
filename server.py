@@ -116,8 +116,7 @@ class Game:
         self.message += f"<p>President {self.president.name} is selecting a chancellor."
 
 
-# game = Game(["Jakub", "Ondra", "Marek", "Filip", "Tomas"])
-game = Game(["Anna", "Bob", "Cecil", "David", "Fiona"])
+game = Game(["Anna", "Bob", "Cecil", "David", "Eva", "Fiona", "Gustav"])
 
 
 @app.route('/images/<path:path>')
@@ -245,7 +244,7 @@ def get_private_info(path):
     elif game.state == States.INVESTIGATION_FINISHED and game.president == player:
         ret["action"] = "investigation_finished"
         role = "liberal" if game.last_investigated.role == "liberal" else "fascist"
-        ret["result"] = f"{game.last_investigated.name} is {role}!"
+        ret["result"] = f"{game.last_investigated.name} is a {role}!"
 
     return str(json.dumps(ret))
 
@@ -448,7 +447,7 @@ def action():
                     game.message = f"President {game.president.name} now select president for special elections."
                     game.state = States.EXTRA_PRESIDENT
                 elif (game.fasist_articles == 2 and len(game.players) >= 7) or (
-                        game.fasist_articles == 1 and len(game.players) >= 5):
+                        game.fasist_articles == 1 and len(game.players) >= 9):
                     game.message = f"President {game.president.name} now investigates one player."
                     game.state = States.INVESTIGATION
 

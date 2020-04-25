@@ -91,7 +91,7 @@ function draw_action(ret){
 
     else if(ret["action"]=="investigation"){
         console.log("Investigation")
-        content += "<h5>Choose a player to investigate.</h5>"
+        content += "<h5>Choose a player to investigate:</h5>"
 
         content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='investigation' value='"+ret["candidates"][0]+"' checked>"+ret["candidates"][0]+ "</label> </div>"
         for(var i=1; i<ret["candidates"].length; i++){
