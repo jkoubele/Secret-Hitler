@@ -89,6 +89,18 @@ function draw_action(ret){
 
     }
 
+    else if(ret["action"]=="investigation"){
+        console.log("Investigation")
+        content += "<h5>Choose a player to investigate.</h5>"
+
+        content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='investigation' value='"+ret["candidates"][0]+"' checked>"+ret["candidates"][0]+ "</label> </div>"
+        for(var i=1; i<ret["candidates"].length; i++){
+            content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='investigation' value='"+ret["candidates"][i]+"'>"+ret["candidates"][i]+ "</label> </div>"}
+        
+        content += "<p><p><button type='button' onclick='investigation()' class='btn btn-secondary btn-lg' style='position: absolute; left: 0px;'>Investigate</button>"        
+
+    }
+
     else if (ret["action"] == "voting"){        
         content += "<div class='form-check' ><label class='form-check-label'><input type='radio' class='form-check-input' name='voting' value='ja' checked>"+'Ja!'+"</label> </div>"
         content += "<div class='form-check' ><label class='form-check-label'><input type='radio' class='form-check-input' name='voting' value='nein'>"+'Nein!'+"</label> </div>"
@@ -119,10 +131,13 @@ function draw_action(ret){
         for(var i=0; i<3; i++){
             content += "<p>"+ret['cards'][i]            
         }
-        content += "<p><button class='btn btn-secondary' onclick='inspection_done()'>O.K.</button> </form> "
+        content += "<p><button class='btn btn-secondary' onclick='inspection_done()'>Continue</button> </form> "
+    }
 
-
-
+    else if (ret["action"] == "investigation_finished"){
+        content +=  "<h5>"+ret["result"]+"</h5>"
+        content += "<p><button class='btn btn-secondary' onclick='inspection_done()'>Continue</button> </form> "
+        
     }
 
     else if(ret["action"] =='legislative_chancellor'){        
@@ -185,8 +200,32 @@ function extraElections(){
         "player": name,
         "extraPresident": nominee        
     });      
-    request.send(json);    
+    request.send(json);
+}
 
+
+function investigation(){
+    if (actionSubmited){
+        return
+    }
+    actionSubmited = true
+    var candidatesForm = document.getElementsByName("investigation");
+    var investigated;
+    for(var i = 0; i < candidatesForm.length; i++){
+        if(candidatesForm[i].checked){            
+            investigated = candidatesForm[i].value            
+        }
+    }    
+
+    var request = new XMLHttpRequest();
+    request.open('POST', "/action");    
+    request.setRequestHeader("Content-Type", "application/json");
+    
+    var json = JSON.stringify({
+        "player": name,
+        "investigated": investigated        
+    });      
+    request.send(json);
 }
 
 function execute(){

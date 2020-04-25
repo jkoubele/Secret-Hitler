@@ -27,6 +27,8 @@ class States(Enum):
     EXECUTION = "EXECUTION"
     CARD_INSPECTION = "CARD_INSPECTION"
     EXTRA_PRESIDENT = "EXTRA_PRESIDENT"
+    INVESTIGATION = "INVESTIGATION"
+    INVESTIGATION_FINISHED = "INVESTIGATION_FINISHED"
 
 
 class Game:
@@ -85,16 +87,15 @@ class Game:
         self.veto_president = False
         self.veto_chancellor = False
         self.next_ordinary_president = None
-        
+
         self.victory = None
-        self.victory = "liberal"
 
     def next_round(self, msg=""):
         if self.liberal_articles == 5:
             self.victory = "liberal"
         elif self.fasist_articles == 6:
             self.victory = "fascists"
-        
+
         next_president = self.president
         ok = False
         while not ok:
@@ -104,18 +105,18 @@ class Game:
             next_president = self.players[index]
             if not next_president.dead:
                 ok = True
-        
+
         self.state = States.CHANCELLOR_NOMINATION
         self.president = next_president
         if self.next_ordinary_president:
             self.president = self.next_ordinary_president
             self.next_ordinary_president = None
-        self.chancellor = None        
+        self.chancellor = None
         self.message = msg
         self.message += f"<p>President {self.president.name} is selecting a chancellor."
 
 
-#game = Game(["Jakub", "Ondra", "Marek", "Filip", "Tomas"])
+# game = Game(["Jakub", "Ondra", "Marek", "Filip", "Tomas"])
 game = Game(["Anna", "Bob", "Cecil", "David", "Fiona"])
 
 
@@ -128,13 +129,16 @@ def send_image(path):
 def root():
     return app.send_static_file('index.html')
 
+
 @app.route('/setup')
 def setup():
     return app.send_static_file('setup.html')
 
+
 @app.route('/setup.js')
 def setup_js():
     return app.send_static_file('setup.js')
+
 
 @app.route('/secretHitler.html')
 def root_board():
@@ -173,7 +177,7 @@ def get_public_game():
     ret["message"] = game.message
     ret["deck_cards"] = len(game.deck)
     ret["discard_cards"] = len(game.discard_pile)
-    
+
     ret["victory"] = game.victory
     return str(json.dumps(ret))
 
@@ -229,13 +233,22 @@ def get_private_info(path):
     elif game.state == States.CARD_INSPECTION and game.president == player:
         ret["action"] = "card_inspection"
         ret["cards"] = game.deck[:3]
-        
+
     elif game.state == States.EXTRA_PRESIDENT and game.president == player:
         ret["action"] = "extra_president"
         ret["candidates"] = [p.name for p in game.players if (p != player) and (not p.dead)]
-        
+
+    elif game.state == States.INVESTIGATION and game.president == player:
+        ret["action"] = "investigation"
+        ret["candidates"] = [p.name for p in game.players if (p != player)]
+
+    elif game.state == States.INVESTIGATION_FINISHED and game.president == player:
+        ret["action"] = "investigation_finished"
+        role = "liberal" if game.last_investigated.role == "liberal" else "fascist"
+        ret["result"] = f"{game.last_investigated.name} is {role}!"
 
     return str(json.dumps(ret))
+
 
 @app.route("/restart", methods=['POST'])
 def restart():
@@ -244,6 +257,7 @@ def restart():
     global game
     game = Game(players)
     return ""
+
 
 @app.route("/action", methods=['POST'])
 def action():
@@ -255,11 +269,9 @@ def action():
         game.message = f"President {game.president.name} nominated {game.nominee.name} for chancellor. Vote Ja or Nein."
         game.num_votes = 0
         print(f"Chncellor nomination. Cards left: {len(game.deck)}, discard pile: {len(game.discard_pile)}")
-        
-        
+
+
     elif game.state == States.EXTRA_PRESIDENT:
-        
-        
         next_ordinary_president = game.president
         ok = False
         while not ok:
@@ -269,14 +281,23 @@ def action():
             next_ordinary_president = game.players[index]
             if not next_ordinary_president.dead:
                 ok = True
-        
-        game.next_ordinary_president = next_ordinary_president        
+
+        game.next_ordinary_president = next_ordinary_president
         game.president = game.players_dict[action["extraPresident"]]
         game.chancellor = None
         game.state = States.CHANCELLOR_NOMINATION
         game.message = f"<p>President {game.president.name} is selecting a chancellor."
-        
-        
+
+    elif game.state == States.INVESTIGATION:
+
+        investigated = game.players_dict[action["investigated"]]
+        game.last_investigated = investigated
+        game.message = f"<p>President {game.president.name} investigated {investigated.name}."
+        game.state = States.INVESTIGATION_FINISHED
+
+    elif game.state == States.INVESTIGATION_FINISHED:
+        game.next_round()
+
 
     elif game.state == States.VOTING:
         game.players_dict[action["player"]].ja = True if action["vote"] == "ja" else False
@@ -299,7 +320,7 @@ def action():
 
                 game.last_chancellor = game.chancellor
                 game.last_president = game.president
-                
+
                 if game.fasist_articles >= 3 and game.chancellor.role == "hitler":
                     game.victory = "fascists"
 
@@ -343,7 +364,7 @@ def action():
         game.message = "President passed articles to the chancellor."
         game.state = States.LEGISLATIVE_CHANCELLOR
         game.veto_president = action["veto"]
-        print("President veto ", game.veto_president)
+
 
     elif game.state == States.EXECUTION:
         game.players_dict[action["executed"]].dead = True
@@ -388,12 +409,10 @@ def action():
                 if article == "Liberal":
                     game.liberal_articles += 1
                     game.message += "<p>Angry mob in streets passed a liberal article!"
-                    # TODO: handle liberal victory 
 
                 else:
                     game.fasist_articles += 1
                     game.message += "<p>Angry mob in streets passed a fascist article! "
-                    # TODO: handle  fascist victory 
 
             game.next_round(game.message)
 
@@ -413,12 +432,10 @@ def action():
             if article == "Liberal":
                 game.liberal_articles += 1
                 game.next_round()
-                # TODO: handle liberal victory 
+
 
             else:
                 game.fasist_articles += 1
-                # TODO: handle  fascist victory 
-                # TODO: handle presidential powers
 
                 if (game.fasist_articles in [4, 5]):
                     game.state = States.EXECUTION
@@ -427,9 +444,13 @@ def action():
                 elif (game.fasist_articles in [3] and len(game.players) in [5, 6]):
                     game.message = f"President {game.president.name} now inspects top 3 cards."
                     game.state = States.CARD_INSPECTION
-                elif (game.fasist_articles in [3] and len(game.players) >=7 ):
+                elif (game.fasist_articles in [3] and len(game.players) >= 7):
                     game.message = f"President {game.president.name} now select president for special elections."
                     game.state = States.EXTRA_PRESIDENT
+                elif (game.fasist_articles == 2 and len(game.players) >= 7) or (
+                        game.fasist_articles == 1 and len(game.players) >= 5):
+                    game.message = f"President {game.president.name} now investigates one player."
+                    game.state = States.INVESTIGATION
 
                 else:
                     game.next_round()
