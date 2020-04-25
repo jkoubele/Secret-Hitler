@@ -2,6 +2,8 @@ var currentAction = ""
 var actionSubmited = false
 var vetoPossible = false;
 
+var victoryShown = false;
+
 var name  = sessionStorage.getItem("NAME");
 //alert("Wilkommen, "+name)
 
@@ -11,7 +13,8 @@ function update() {
     request_public.onload = function () {          
         var ret = JSON.parse(request_public.responseText);        
         draw_board(ret)    
-        draw_policies(ret)        
+        draw_policies(ret) 
+        drawVictory(ret)       
         document.getElementById("message").innerHTML = ret['message']             
     }
 
@@ -26,6 +29,22 @@ function update() {
 
     request_public.send(); 
     request_private.send();
+}
+
+function drawVictory(ret){    
+    if(!ret["victory"] || victoryShown){
+        return
+    }    
+    victoryShown = true
+
+    if (ret["victory"]==="fascists"){
+        $("#fascistsModal").modal()
+    }
+
+    else if (ret["victory"]==="liberal"){
+        $("#liberalModal").modal()
+    }
+
 }
 
 function draw_action(ret){
@@ -65,7 +84,7 @@ function draw_action(ret){
         for(var i=1; i<ret["candidates"].length; i++){
             content += "<div class='form-check' ><label class='form-check-label' onsubmit='event.preventDefault();'><input type='radio' class='form-check-input' name='extraElections' value='"+ret["candidates"][i]+"'>"+ret["candidates"][i]+ "</label> </div>"        }
         
-        content += "<p><p><button type='button' onclick='extraElections()' class='btn btn-secondary btn-lg' style='position: absolute; left: 0px;'>Execute!</button>"        
+        content += "<p><p><button type='button' onclick='extraElections()' class='btn btn-secondary btn-lg' style='position: absolute; left: 0px;'>Select president</button>"        
 
 
     }
@@ -77,10 +96,9 @@ function draw_action(ret){
 
     }
 
-    else if(ret["action"] == "legislative_president"){
-        console.log("Veto"+ret["veto"])
+    else if(ret["action"] == "legislative_president"){        
         content += "<h5>Choose an article to discard:</h5>"        
-        console.log(ret['cards'])
+        
         content += "<form class='form-inline' onsubmit='event.preventDefault();'>"
         content += "<div class='form-check-inline' ><label class='form-check-label'><input type='radio' class='form-check-input' name='president_legislative' value="+ret['cards'][0]+" checked>"+ret['cards'][0]+"</label> </div>"
         for(var i=1; i<3; i++){
@@ -96,8 +114,8 @@ function draw_action(ret){
     }
 
     else if(ret["action"] == "card_inspection"){
-        content += "<h5>Next 3 cards in the deck:</h5>"        
-        console.log(ret['cards'])        
+        content += "<h5>Next 3 cards in the deck:</h5>"      
+           
         for(var i=0; i<3; i++){
             content += "<p>"+ret['cards'][i]            
         }
@@ -107,10 +125,8 @@ function draw_action(ret){
 
     }
 
-    else if(ret["action"] =='legislative_chancellor'){
-        console.log("Veto"+ret["veto"])
-        content += "<h5>Accept an article:</h5>"
-        console.log("Chancellors choice:"+ret['cards'])
+    else if(ret["action"] =='legislative_chancellor'){        
+        content += "<h5>Accept an article:</h5>"        
 
         content += "<form class='form-inline' onsubmit='event.preventDefault();'>"
         content += "<div class='form-check-inline' ><label class='form-check-label'><input type='radio' class='form-check-input' name='chancellor_legislative' value="+ret['cards'][0]+" checked>"+ret['cards'][0]+"</label> </div>"
@@ -212,8 +228,8 @@ function legislative_chancellor(){
             article=form[i].value
             break
         }
-    } 
-    console.log(article)
+    }
+    
 
     var request = new XMLHttpRequest();
     request.open('POST', "/action");    
@@ -239,8 +255,7 @@ function legislative_president(){
         return
     }
     actionSubmited = true
-
-    console.log("Article discarded")
+       
     var articles_passed = []
     var form = document.getElementsByName("president_legislative");
     for(var i = 0; i < form.length; i++){
@@ -410,10 +425,14 @@ function draw_policies(ret){
     var content = ""
     for(var i=0; i<5; i++){
         if (i >= ret['liberal_articles']){            
-                content += "<div class='article-empty' style='left: "+(sizeX+margin)*i +"px; top: 20px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"            
+                content += "<div class='article-empty' style='left: "+(sizeX+margin)*i +"px; top: 20px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'>"  
+                if(i==4){                                                   
+                    content += "<div class='dove-small' style='left: 0px; top: 0px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div> "                                  
+                }     
+                content += "</div>"
             
         }
-        else{
+        else{           
             content += "<div class='article-liberal' style='left: "+(sizeX+margin)*i +"px; top: 20px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"
         }
         
@@ -440,6 +459,10 @@ function draw_policies(ret){
                 if(i==4){                
                     content += "<div class='bullet' style='left: 0px; top: 0px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"                
                 }
+                if(i==5){                
+                    content += "<div class='skull-small' style='left: 0px; top: 0px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"                                  
+                }
+                
 
             }
             else if(ret["players"].length<=8){
@@ -455,6 +478,10 @@ function draw_policies(ret){
                 if(i==4){                
                     content += "<div class='bullet' style='left: 0px; top: 0px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"                
                 }
+                if(i==5){                
+                    content += "<div class='skull-small' style='left: 0px; top: 0px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"                                  
+                }
+                
                 
             }
             else if(ret["players"].length<=10){
@@ -472,6 +499,9 @@ function draw_policies(ret){
                 }
                 if(i==4){                
                     content += "<div class='bullet' style='left: 0px; top: 0px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"                
+                }
+                if(i==5){                
+                    content += "<div class='skull-small' style='left: 0px; top: 0px; width:"+Math.round(sizeX)+"px; height:"+Math.round(sizeY)+"px;'></div>"                                  
                 }
                 
             }

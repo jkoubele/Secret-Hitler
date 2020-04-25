@@ -85,8 +85,16 @@ class Game:
         self.veto_president = False
         self.veto_chancellor = False
         self.next_ordinary_president = None
+        
+        self.victory = None
+        self.victory = "liberal"
 
     def next_round(self, msg=""):
+        if self.liberal_articles == 5:
+            self.victory = "liberal"
+        elif self.fasist_articles == 6:
+            self.victory = "fascists"
+        
         next_president = self.president
         ok = False
         while not ok:
@@ -165,6 +173,8 @@ def get_public_game():
     ret["message"] = game.message
     ret["deck_cards"] = len(game.deck)
     ret["discard_cards"] = len(game.discard_pile)
+    
+    ret["victory"] = game.victory
     return str(json.dumps(ret))
 
 
@@ -289,6 +299,9 @@ def action():
 
                 game.last_chancellor = game.chancellor
                 game.last_president = game.president
+                
+                if game.fasist_articles >= 3 and game.chancellor.role == "hitler":
+                    game.victory = "fascists"
 
             else:
                 game.anarchy_counter += 1
@@ -334,6 +347,8 @@ def action():
 
     elif game.state == States.EXECUTION:
         game.players_dict[action["executed"]].dead = True
+        if game.players_dict[action["executed"]].role == "hitler":
+            game.victory = "liberal"
         game.next_round()
 
     elif game.state == States.CARD_INSPECTION:
