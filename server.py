@@ -34,6 +34,10 @@ class States(Enum):
 class Game:
 
     def __init__(self, names):
+        self.restart(names)
+
+        
+    def restart(self, names):
         random.shuffle(names)
         self.players = [Player(name) for name in names]
 
@@ -252,9 +256,8 @@ def get_private_info(path):
 @app.route("/restart", methods=['POST'])
 def restart():
     players = request.json['players']
-    print("Restarting the game with players:", players)
-    global game
-    game = Game(players)
+    game.restart(players)
+    print("Restarting the game with players:", players)    
     return ""
 
 
