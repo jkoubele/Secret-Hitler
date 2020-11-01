@@ -36,7 +36,6 @@ class Game:
     def __init__(self, names):
         self.restart(names)
 
-        
     def restart(self, names):
         random.shuffle(names)
         self.players = [Player(name) for name in names]
@@ -239,7 +238,7 @@ def get_private_info(path):
 
     elif game.state == States.EXTRA_PRESIDENT and game.president == player:
         ret["action"] = "extra_president"
-        ret["candidates"] = [p.name for p in game.players if (p != player) and (not p.dead)]
+        ret["candidates"] = [p.name for p in game.players if not p.dead]
 
     elif game.state == States.INVESTIGATION and game.president == player:
         ret["action"] = "investigation"
@@ -257,7 +256,7 @@ def get_private_info(path):
 def restart():
     players = request.json['players']
     game.restart(players)
-    print("Restarting the game with players:", players)    
+    print("Restarting the game with players:", players)
     return ""
 
 
