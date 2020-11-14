@@ -19,8 +19,6 @@
 </div>
 
 
-
-
 <div class="row" style="margin-top: 150px;">
     <div class="col-sm-12 text-center"  >
         <h2>Halt! Wie heisst du?</h2>
@@ -32,9 +30,18 @@
         <form class="form-inline" style="margin-top: 10px;" action=secretHitler.html>
             <div class="form-group">
             <label for="playername">Ich heisse... </label>
-            <input  class="form-control" id="playername" placeholder="Enter your name">
-            </div>         
-            <button class="btn btn-primary" onclick="register()">Submit</button>
+            <!--<input  class="form-control" id="playername" placeholder="Enter your name"> -->
+            </div>    
+            <div class="form-group">                
+                <select class="form-control" id="select" style="margin-left: 25px; margin-right: 25px">
+                  <option>Anna</option>
+                  <option>2</option>
+                  <option>3</option>
+                  <option>4</option>
+                </select>
+            </div>   
+            <button type="submit" class="btn btn-primary" onclick="register()">Submit</button>
+            
         </form>
     
 </div>
