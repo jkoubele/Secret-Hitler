@@ -43,7 +43,7 @@ function restart(){
         }
 
     var request = new XMLHttpRequest();
-    request.open('POST', "/restart");    
+    request.open('POST', "/restart?_=" + new Date().getTime());
     request.setRequestHeader("Content-Type", "application/json");
     console.log("restarting game witj players: "+newPlayers)
     var json = JSON.stringify({
