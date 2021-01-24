@@ -254,6 +254,7 @@ def get_private_info(path):
 
 @app.route("/restart", methods=['POST'])
 def restart():
+    print(f"Got request to restart the game with JSON: {request.json}")
     players = request.json['players']
     game.restart(players)
     print("Restarting the game with players:", players)
