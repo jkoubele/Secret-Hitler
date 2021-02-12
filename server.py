@@ -343,7 +343,7 @@ def action():
                     game.last_chancellor = None
                     game.last_president = None
 
-                    if len(game.deck) <= 3:
+                    if len(game.deck) < 3:
                         game.deck += game.discard_pile
                         game.discard_pile = []
                         random.shuffle(game.deck)
@@ -388,7 +388,7 @@ def action():
         if game.veto_president and game.veto_chancellor:
             # handle veto
             game.discard_pile += game.dealed_cards_president
-            if len(game.deck) <= 3:
+            if len(game.deck) < 3:
                 game.deck += game.discard_pile
                 game.discard_pile = []
                 random.shuffle(game.deck)
@@ -403,7 +403,7 @@ def action():
                 game.last_chancellor = None
                 game.last_president = None
 
-                if len(game.deck) <= 3:
+                if len(game.deck) < 3:
                     game.deck += game.discard_pile
                     game.discard_pile = []
                     random.shuffle(game.deck)
@@ -426,7 +426,7 @@ def action():
                     break
             game.discard_pile += game.dealed_cards_president
 
-            if len(game.deck) <= 3:
+            if len(game.deck) < 3:
                 game.deck += game.discard_pile
                 game.discard_pile = []
                 random.shuffle(game.deck)
